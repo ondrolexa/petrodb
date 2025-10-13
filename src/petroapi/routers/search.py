@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from petroapi.auth import get_current_user
 from petroapi.database import get_db
-from petroapi.models import Project, Sample, Spot, User
-from petroapi.schema import ProjectSchema, SampleSchema, SpotSchema
+from petroapi.models import Profile, Project, Sample, Spot, User
+from petroapi.schema import ProfileSchema, ProjectSchema, SampleSchema, SpotSchema
 
 router = APIRouter()
 
@@ -78,3 +78,28 @@ def get_spots(
             status_code=status.HTTP_404_NOT_FOUND, detail="Mineral not found"
         )
     return spots
+
+
+@router.get("/search/profile/{pid}/{sid}/{label}", response_model=ProfileSchema)
+def get_profile(
+    pid: int,
+    sid: int,
+    label: str,
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+):
+    profile = (
+        db.query(Profile)
+        .join(Sample)
+        .join(Project)
+        .where(Project.users.any(id=user.id))
+        .filter(Project.id == pid)
+        .filter(Sample.id == sid)
+        .filter(Profile.label == label)
+        .first()
+    )
+    if profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
+    return profile
