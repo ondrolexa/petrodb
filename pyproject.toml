@@ -1,0 +1,28 @@
+[project]
+name = "petroapi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ondrej Lexa", email = "lexa.ondrej@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "databases[postgresql]>=0.9.0",
+    "dotenv>=0.9.9",
+    "fastapi>=0.118.3",
+    "psycopg2-binary>=2.9.11",
+    "pwdlib[argon2]>=0.2.1",
+    "pydantic[email]>=2.12.0",
+    "pyjwt>=2.10.1",
+    "python-multipart>=0.0.20",
+    "sqlalchemy>=2.0.44",
+    "uvicorn>=0.37.0",
+]
+
+[project.scripts]
+petroapi = "petroapi:main"
+
+[build-system]
+requires = ["uv_build>=0.9.1,<0.10.0"]
+build-backend = "uv_build"
