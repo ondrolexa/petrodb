@@ -6,9 +6,10 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 _ = load_dotenv()
 
 DBHOST = str(os.environ.get("DBHOST"))
-POSTGRES_USER = str(os.environ.get("POSTGRES_USER"))
-POSTGRES_PASSWORD = str(os.environ.get("POSTGRES_PASSWORD"))
-DATABASE_URL=f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{DBHOST}/petrodb"
+DBNAME = str(os.environ.get("DBNAME"))
+DBUSER = str(os.environ.get("DBUSER"))
+DBPASSWORD = str(os.environ.get("DBPASSWORD"))
+DATABASE_URL = f"postgresql://{DBUSER}:{DBPASSWORD}@{DBHOST}/{DBNAME}"
 
 engine = create_engine(DATABASE_URL)
 
