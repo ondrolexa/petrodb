@@ -1,11 +1,13 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from petroapi.models import User, Project, Sample
-from petroapi.schema import SampleCreateSchema, SampleSchema
-from petroapi.database import get_db
+
 from petroapi.auth import get_current_user
+from petroapi.database import get_db
+from petroapi.models import Project, Sample, User
+from petroapi.schema import SampleCreateSchema, SampleSchema
 
 router = APIRouter()
 
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 # CREATE Sample
-@router.post("/samples/{project_id}", response_model=SampleSchema)
+@router.post("/sample/{project_id}", response_model=SampleSchema)
 def create_sample(
     project_id: int,
     sample: SampleCreateSchema,
@@ -30,9 +32,15 @@ def create_sample(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    if db.query(Sample).filter_by(project_id=project_id).filter_by(name=sample.name).first():
+    if (
+        db.query(Sample)
+        .filter_by(project_id=project_id)
+        .filter_by(name=sample.name)
+        .first()
+    ):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Sample with same name already exists"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sample with same name already exists",
         )
     new_sample = Sample(**sample.model_dump())
     project.samples.append(new_sample)
@@ -68,7 +76,7 @@ def get_samples(
 
 
 # READ Single Sample
-@router.get("/samples/{project_id}/{sample_id}", response_model=SampleSchema)
+@router.get("/sample/{project_id}/{sample_id}", response_model=SampleSchema)
 def get_sample(
     project_id: int,
     sample_id: int,
@@ -99,7 +107,7 @@ def get_sample(
 
 
 # UPDATE Sample
-@router.put("/samples/{project_id}/{sample_id}", response_model=SampleSchema)
+@router.put("/sample/{project_id}/{sample_id}", response_model=SampleSchema)
 def update_sample(
     project_id: int,
     sample_id: int,
@@ -136,7 +144,7 @@ def update_sample(
 
 
 # DELETE Sample
-@router.delete("/samples/{project_id}/{sample_id}", response_model=dict[str, str])
+@router.delete("/sample/{project_id}/{sample_id}", response_model=dict[str, str])
 def delete_sample(
     project_id: int,
     sample_id: int,

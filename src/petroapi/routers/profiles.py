@@ -1,11 +1,13 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from petroapi.models import User, Project, Sample, Profile
-from petroapi.schema import ProfileCreateSchema, ProfileSchema
-from petroapi.database import get_db
+
 from petroapi.auth import get_current_user
+from petroapi.database import get_db
+from petroapi.models import Profile, Project, Sample, User
+from petroapi.schema import ProfileCreateSchema, ProfileSchema
 
 router = APIRouter()
 
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 # CREATE Sample Profile
-@router.post("/profiles/{project_id}/{sample_id}", response_model=ProfileSchema)
+@router.post("/profile/{project_id}/{sample_id}", response_model=ProfileSchema)
 def create_profile(
     project_id: int,
     sample_id: int,
@@ -41,9 +43,15 @@ def create_profile(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
         )
-    if db.query(Profile).filter_by(sample_id=sample_id).filter_by(label=profile.label).first():
+    if (
+        db.query(Profile)
+        .filter_by(sample_id=sample_id)
+        .filter_by(label=profile.label)
+        .first()
+    ):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Profile with same label already exists"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile with same label already exists",
         )
     new_profile = Profile(**profile.dict())
     sample.profiles.append(new_profile)
@@ -54,9 +62,7 @@ def create_profile(
 
 
 # READ All Sample Profiles
-@router.get(
-    "/profiles/{project_id}/{sample_id}", response_model=list[ProfileSchema]
-)
+@router.get("/profiles/{project_id}/{sample_id}", response_model=list[ProfileSchema])
 def get_profiles(
     project_id: int,
     sample_id: int,
@@ -92,7 +98,7 @@ def get_profiles(
 
 
 # READ Single Sample Profile
-@router.get("/profiles/{project_id}/{sample_id}/{profile_id}")
+@router.get("/profile/{project_id}/{sample_id}/{profile_id}")
 def get_profile(
     project_id: int,
     sample_id: int,
@@ -135,7 +141,7 @@ def get_profile(
 
 # UPDATE Sample Profile
 @router.put(
-    "/profiles/{project_id}/{sample_id}/{profile_id}",
+    "/profile/{project_id}/{sample_id}/{profile_id}",
     response_model=ProfileSchema,
 )
 def update_profile(
@@ -186,7 +192,7 @@ def update_profile(
 
 # DELETE Sample Profile
 @router.delete(
-    "/profiles/{project_id}/{sample_id}/{profile_id}",
+    "/profile/{project_id}/{sample_id}/{profile_id}",
     response_model=dict[str, str],
 )
 def delete_profile(

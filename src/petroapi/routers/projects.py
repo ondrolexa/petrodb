@@ -1,11 +1,13 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from petroapi.models import User, Project
-from petroapi.schema import ProjectCreateSchema, ProjectSchema, UserNameSchema
-from petroapi.database import get_db
+
 from petroapi.auth import get_current_user
+from petroapi.database import get_db
+from petroapi.models import Project, User
+from petroapi.schema import ProjectCreateSchema, ProjectSchema, UserNameSchema
 
 router = APIRouter()
 
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 # CREATE Project
-@router.post("/projects/", response_model=ProjectSchema)
+@router.post("/project/", response_model=ProjectSchema)
 def create_project(
     project: ProjectCreateSchema,
     user: Annotated[User, Depends(get_current_user)],
@@ -48,7 +50,7 @@ def get_projects(
 
 
 # READ Single Project
-@router.get("/projects/{project_id}", response_model=ProjectSchema)
+@router.get("/project/{project_id}", response_model=ProjectSchema)
 def get_project(
     project_id: int,
     user: Annotated[User, Depends(get_current_user)],
@@ -68,7 +70,7 @@ def get_project(
 
 
 # UPDATE Project
-@router.put("/projects/{project_id}", response_model=ProjectSchema)
+@router.put("/project/{project_id}", response_model=ProjectSchema)
 def update_project(
     project_id: int,
     project_update: ProjectCreateSchema,
@@ -94,7 +96,7 @@ def update_project(
 
 
 # ADD USER Project
-@router.put("/projects/{project_id}/adduser", response_model=ProjectSchema)
+@router.put("/project/{project_id}/adduser", response_model=ProjectSchema)
 def adduser_project(
     project_id: int,
     user_update: UserNameSchema,
@@ -135,7 +137,7 @@ def adduser_project(
 
 
 # ADD USER Project
-@router.put("/projects/{project_id}/removeuser", response_model=ProjectSchema)
+@router.put("/project/{project_id}/removeuser", response_model=ProjectSchema)
 def removeuser_project(
     project_id: int,
     user_update: UserNameSchema,
@@ -176,7 +178,7 @@ def removeuser_project(
 
 
 # DELETE Project
-@router.delete("/projects/{project_id}", response_model=dict[str, str])
+@router.delete("/project/{project_id}", response_model=dict[str, str])
 def delete_project(
     project_id: int,
     user: Annotated[User, Depends(get_current_user)],

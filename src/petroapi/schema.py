@@ -63,12 +63,14 @@ class ProjectSchema(BaseModel):
 
 class SampleCreateSchema(BaseModel):
     name: str
+    description: str | None = None
 
     class Config:
         from_attributes = True
         json_schema_extra = {
             "example": {
-                "name": "SX17",
+                "name": "SX17W",
+                "description": "mylonite",
             }
         }
 
@@ -76,6 +78,7 @@ class SampleCreateSchema(BaseModel):
 class SampleSchema(BaseModel):
     id: int
     name: str
+    description: str | None = None
 
     class Config:
         from_attributes = True

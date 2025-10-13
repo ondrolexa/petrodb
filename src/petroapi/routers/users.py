@@ -1,11 +1,13 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+from petroapi.auth import get_current_user, get_password_hash
+from petroapi.database import get_db
 from petroapi.models import User
 from petroapi.schema import UserCreateSchema, UserSchema
-from petroapi.auth import get_password_hash, get_current_user
-from petroapi.database import get_db
 
 router = APIRouter()
 
@@ -13,8 +15,8 @@ router = APIRouter()
 
 
 # Create User
-@router.post("/users/", response_model=UserSchema)
-def register_user_admin(
+@router.post("/user/", response_model=UserSchema)
+def create_user(
     new_user: UserCreateSchema,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
@@ -45,7 +47,7 @@ def register_user_admin(
 
 # READ All Users
 @router.get("/users/", response_model=list[UserSchema])
-def get_users_admin(
+def get_users(
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
 ):

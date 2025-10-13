@@ -7,11 +7,16 @@ API to PostgreSQL based petrological database
 Copy `.env.sample` to `.env` and modify. For testing you can use
 `docker-compose.yml` to run postgresql database.
 
-Run API:
+## Create venv
+```
+uv sync
+```
+
+## Run API
 ```
 uv run uvicorn petroapi:app --reload
 ```
 
-## Docs
+## API Docs
 
 http://localhost:8000/docs

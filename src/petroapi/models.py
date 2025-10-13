@@ -1,8 +1,8 @@
-from sqlalchemy import Table, Column, String, Integer, Float, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, Table
 from sqlalchemy.dialects.postgresql import JSONB
-from petroapi.database import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from petroapi.database import Base
 
 users_projects = Table(
     "users_projects",
@@ -73,6 +73,7 @@ class Sample(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"))
     name: Mapped[str] = mapped_column(String(32), nullable=False)
+    description: Mapped[str] = mapped_column(String)
     spots: Mapped[list[Spot]] = relationship(back_populates="sample")
     areas: Mapped[list[Area]] = relationship(back_populates="sample")
     profiles: Mapped[list[Profile]] = relationship(back_populates="sample")

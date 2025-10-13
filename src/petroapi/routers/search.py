@@ -1,15 +1,13 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from petroapi.models import User, Project, Sample, Spot
-from petroapi.schema import (
-    ProjectSchema,
-    SampleSchema,
-    SpotSchema,
-)
-from petroapi.database import get_db
+
 from petroapi.auth import get_current_user
+from petroapi.database import get_db
+from petroapi.models import Project, Sample, Spot, User
+from petroapi.schema import ProjectSchema, SampleSchema, SpotSchema
 
 router = APIRouter()
 
@@ -57,8 +55,8 @@ def get_sample(
     return sample
 
 
-@router.get("/search/spot/{pid}/{sid}/{mineral}", response_model=list[SpotSchema])
-def get_spot(
+@router.get("/search/spots/{pid}/{sid}/{mineral}", response_model=list[SpotSchema])
+def get_spots(
     pid: int,
     sid: int,
     mineral: str,
