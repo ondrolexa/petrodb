@@ -30,5 +30,5 @@ USER nonroot
 WORKDIR /app
 
 # Run the FastAPI application by default
-#CMD ["fastapi", "run", "--host", "0.0.0.0", "src/uv_docker_example"]
-CMD ["uvicorn", "petroapi:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["fastapi", "run", "petroapi:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+#CMD ["uvicorn", "petroapi:app", "--host", "0.0.0.0", "--port", "80"]
