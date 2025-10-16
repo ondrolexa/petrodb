@@ -280,7 +280,7 @@ dependencies = [
 requires-dist = [
     { name = "databases", extras = ["postgresql"], specifier = ">=0.9.0" },
     { name = "dotenv", specifier = ">=0.9.9" },
-    { name = "fastapi", specifier = ">=0.118.3" },
+    { name = "fastapi", specifier = ">=0.119.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.2.1" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.12.0" },

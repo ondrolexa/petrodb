@@ -17,9 +17,9 @@ services:
       - ./postgres-data:/data/postgres
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "petrodb", "-U", "${DBUSER}" ]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 3
 
   petroapi:
     container_name: petrodb_api
@@ -34,6 +34,9 @@ services:
       DBNAME: ${DBNAME}
       DBUSER: ${DBUSER}
       DBPASSWORD: ${DBPASSWORD}
+    depends_on:
+      petrodb:
+        condition: service_healthy
     ports:
       - "8000:80"
     networks:
