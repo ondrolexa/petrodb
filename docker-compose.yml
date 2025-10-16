@@ -21,7 +21,25 @@ services:
       timeout: 10s
       retries: 5
 
+  petroapi:
+    container_name: petrodb_api
+    image: ondrolexa/petroapi
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      DBHOST: petrodb
+      DBNAME: ${DBNAME}
+      DBUSER: ${DBUSER}
+      DBPASSWORD: ${DBPASSWORD}
+    ports:
+      - "8000:80"
+    networks:
+      - petrodb_net
+    restart: unless-stopped
+
 networks:
   petrodb_net:
     driver: bridge
-
