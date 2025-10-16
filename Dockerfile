@@ -30,4 +30,4 @@ USER nonroot
 WORKDIR /app
 
 # Run the FastAPI application by default
-CMD ["uvicorn", "petroapi:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers", "--forwarded-allow-ips", "'*'"]
+CMD ["uvicorn", "petroapi:app", "--host", "0.0.0.0", "--port", "80"]
