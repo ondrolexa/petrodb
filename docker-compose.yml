@@ -13,6 +13,8 @@ services:
     networks:
       - petrodb_net
     restart: unless-stopped
+    volumes:
+      - ./postgres-data:/data/postgres
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "petrodb", "-U", "${DBUSER}" ]
       interval: 30s
