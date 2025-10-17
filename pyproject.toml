@@ -11,6 +11,7 @@ dependencies = [
     "databases[postgresql]>=0.9.0",
     "dotenv>=0.9.9",
     "fastapi>=0.119.0",
+    "jinja2>=3.1.6",
     "psycopg2-binary>=2.9.11",
     "pwdlib[argon2]>=0.2.1",
     "pydantic[email]>=2.12.0",

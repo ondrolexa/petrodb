@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PetroDB REST API Service</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-blue-700 text-white py-6 shadow-md">
+    <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
+      <h1 class="text-2xl font-bold">PetroDB REST API</h1>
+    </div>
+  </header>
+
+  <!-- Intro -->
+  <section class="max-w-6xl mx-auto px-4 py-12">
+    <h2 class="text-3xl font-semibold mb-4">About the API</h2>
+    <p class="text-lg mb-6 leading-relaxed">
+      The <strong>PetroDB REST API</strong> provides access to petrological project management and analytical data.
+      It offers endpoints to manage <em>users, projects, samples, analytical spots, areas, and profiles</em>.
+      Authentication is handled via OAuth2 password flow.
+    </p>
+    <ul class="list-disc pl-6 text-gray-700 mb-8">
+      <li>Secure OAuth2-based token authentication</li>
+      <li>Comprehensive CRUD operations for all geological entities</li>
+      <li>Integrated search endpoints for quick data retrieval</li>
+      <li>JSON-based responses for seamless integration</li>
+    </ul>
+    <a href="docs" target="_blank" class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">
+      Explore API Endpoints →
+    </a>
+  </section>
+
+  <!-- Auth Section -->
+  <section class="max-w-6xl mx-auto px-4 py-12">
+    <h2 class="text-2xl font-semibold mb-4">Authentication</h2>
+    <p class="text-gray-700 mb-4">
+      The API uses <strong>OAuth2 Password Flow</strong> for authentication. Obtain a token using the <code>/token</code> endpoint:
+    </p>
+    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg text-sm">
+POST /token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+username=your_username
+password=your_password
+    </pre>
+    <p class="text-sm text-gray-600 mt-2">
+      Use the received <code>access_token</code> as a Bearer token in subsequent requests.
+    </p>
+  </section>
+
+  <!-- API Modules -->
+  <section class="bg-white py-10 border-t">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-2xl font-semibold mb-6">Available API Modules</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Users</h3>
+          <p class="text-gray-600">Endpoints for user creation and management (admin only).</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Projects</h3>
+          <p class="text-gray-600">Manage geological projects and associated users.</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Samples</h3>
+          <p class="text-gray-600">Manage rock or mineral samples under projects.</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Spots</h3>
+          <p class="text-gray-600">Endpoints for analytical spot data management.</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Areas</h3>
+          <p class="text-gray-600">Endpoints to store and manage analytical area results.</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Profiles & Profile Spots</h3>
+          <p class="text-gray-600">Profiles represent analytical traverses; profile spots are measured points.</p>
+        </div>
+
+        <div class="p-6 border rounded-xl shadow-sm hover:shadow-md transition">
+          <h3 class="font-bold text-lg mb-2">Search</h3>
+          <p class="text-gray-600">Search for projects, samples, or analytical data by attributes.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-blue-700 text-white py-6 mt-12">
+    <div class="max-w-6xl mx-auto px-4 text-center text-sm">
+      © 2025 Ondrej Lexa — <a href="https://github.com/ondrolexa/petrodb" target="_blank" class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">PetroDB API</a> Service
+    </div>
+  </footer>
+
+</body>
+</html>
+

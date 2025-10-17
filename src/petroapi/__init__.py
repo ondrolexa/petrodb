@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from os.path import dirname, join
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 from petroapi.database import Base, engine
 from petroapi.config import init_db
 from petroapi.routers.token import router as token_router
@@ -10,6 +12,8 @@ from petroapi.routers.areas import router as areas_router
 from petroapi.routers.profiles import router as profiles_router
 from petroapi.routers.profilespots import router as profilespots_router
 from petroapi.routers.search import router as search_router
+
+templates = Jinja2Templates(directory=join(dirname(__file__), "templates"))
 
 Base.metadata.create_all(engine)
 init_db()
@@ -63,5 +67,5 @@ app.include_router(search_router, prefix="/api", tags=["Search"])
 
 
 @app.get("/", include_in_schema=False)
-async def root():
-    return {"message": "Hello from petrodb API"}
+async def root(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
