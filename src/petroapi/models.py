@@ -32,6 +32,7 @@ class Spot(Base):
     label: Mapped[str] = mapped_column(String(32), nullable=False)
     mineral: Mapped[str | None] = mapped_column(String)
     values: Mapped[dict[str, float]] = mapped_column(JSONB, nullable=False)
+    others: Mapped[dict] = mapped_column(JSONB, nullable=False)
     sample: Mapped["Sample"] = relationship(back_populates="spots")
 
 
@@ -43,6 +44,7 @@ class Area(Base):
     label: Mapped[str] = mapped_column(String(32), nullable=False)
     weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     values: Mapped[dict[str, float]] = mapped_column(JSONB, nullable=False)
+    others: Mapped[dict] = mapped_column(JSONB, nullable=False)
     sample: Mapped["Sample"] = relationship(back_populates="areas")
 
 
@@ -53,6 +55,7 @@ class ProfileSpot(Base):
     profile_id: Mapped[int] = mapped_column(ForeignKey("profiles.id"), nullable=False)
     index: Mapped[int] = mapped_column(Integer, nullable=False)
     values: Mapped[dict[str, float]] = mapped_column(JSONB, nullable=False)
+    others: Mapped[dict] = mapped_column(JSONB, nullable=False)
     profile: Mapped["Profile"] = relationship(back_populates="spots")
 
 

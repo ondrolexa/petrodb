@@ -8,6 +8,7 @@ services:
       POSTGRES_PASSWORD: ${DBPASSWORD}
       PGDATA: /data/postgres
       POSTGRES_DB: ${DBNAME}
+    user: 1000:1000
     ports:
       - "5432:5432"
     networks:

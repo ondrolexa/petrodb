@@ -88,6 +88,7 @@ class SpotCreateSchema(BaseModel):
     label: str
     mineral: str | None = None
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
@@ -103,6 +104,9 @@ class SpotCreateSchema(BaseModel):
                     "Na2O": 7.12,
                     "K2O": 6.2,
                 },
+                "others": {
+                    "Comment": "inclusion",
+                },
             }
         }
 
@@ -112,6 +116,7 @@ class SpotSchema(BaseModel):
     label: str
     mineral: str | None = None
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
@@ -121,6 +126,7 @@ class AreaCreateSchema(BaseModel):
     label: str
     weight: float
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
@@ -139,6 +145,9 @@ class AreaCreateSchema(BaseModel):
                     "MnO": 0.03100058,
                     "FeO": 1.413152,
                 },
+                "others": {
+                    "Comment": "Q rich zone",
+                },
             }
         }
 
@@ -148,6 +157,7 @@ class AreaSchema(BaseModel):
     label: str
     weight: float
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
@@ -174,6 +184,7 @@ class ProfileSchema(BaseModel):
 class ProfileSpotCreateSchema(BaseModel):
     index: int
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
@@ -191,6 +202,9 @@ class ProfileSpotCreateSchema(BaseModel):
                     "SiO2": 38.071,
                     "MgO": 1.033,
                 },
+                "others": {
+                    "Comment": "near fracture",
+                },
             }
         }
 
@@ -199,6 +213,7 @@ class ProfileSpotSchema(BaseModel):
     id: int
     index: int
     values: dict[str, float]
+    others: dict
 
     class Config:
         from_attributes = True
