@@ -121,7 +121,6 @@ class SpotSchema(BaseModel):
 
 class AreaCreateSchema(BaseModel):
     label: str
-    weight: float
     values: dict[str, Any]
 
     class Config:
@@ -129,7 +128,6 @@ class AreaCreateSchema(BaseModel):
         json_schema_extra = {
             "example": {
                 "label": "sp-1",
-                "weight": 1,
                 "values": {
                     "Na2O": 4.891811,
                     "MgO": 0.254737,
@@ -148,7 +146,6 @@ class AreaCreateSchema(BaseModel):
 class AreaSchema(BaseModel):
     id: int
     label: str
-    weight: float
     values: dict[str, Any]
 
     class Config:

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, Table
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,7 +41,6 @@ class Area(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     sample_id: Mapped[int] = mapped_column(ForeignKey("samples.id"), nullable=False)
     label: Mapped[str] = mapped_column(String(32), nullable=False)
-    weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     values: Mapped[dict[str, float]] = mapped_column(JSONB, nullable=False)
     sample: Mapped["Sample"] = relationship(back_populates="areas")
 
