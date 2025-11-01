@@ -136,7 +136,7 @@ def adduser_project(
         )
 
 
-# ADD USER Project
+# REMOVE USER Project
 @router.put("/project/{project_id}/removeuser", response_model=ProjectSchema)
 def removeuser_project(
     project_id: int,
@@ -154,18 +154,18 @@ def removeuser_project(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
         )
-    new_user = db.query(User).filter_by(username=user_update.username).first()
-    if new_user is None:
+    user_todel = db.query(User).filter_by(username=user_update.username).first()
+    if user_todel is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    if new_user.id == user.id:
+    if user_todel.id == user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot remove yourself",
         )
-    if new_user in project.users:
-        project.users.remove(user)
+    if user_todel in project.users:
+        project.users.remove(user_todel)
         db.add(project)
         db.commit()
         db.refresh(project)

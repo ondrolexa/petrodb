@@ -30,7 +30,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String)
     projects: Mapped[list["Project"]] = relationship(
-        secondary=users_projects, back_populates="users", cascade="all, delete"
+        secondary=users_projects, back_populates="users"
     )
 
 
@@ -119,5 +119,4 @@ class Project(Base):
     users: Mapped[list[User]] = relationship(
         secondary=users_projects,
         back_populates="projects",
-        passive_deletes=True,
     )
