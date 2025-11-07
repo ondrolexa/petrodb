@@ -196,7 +196,10 @@ def get_profilespots(
 
 
 # READ Single Sample Profile Spot
-@router.get("/profilespot/{project_id}/{sample_id}/{profile_id}/{profilespot_id}")
+@router.get(
+    "/profilespot/{project_id}/{sample_id}/{profile_id}/{profilespot_id}",
+    response_model=ProfileSpotSchema,
+)
 def get_profilespot(
     project_id: int,
     sample_id: int,

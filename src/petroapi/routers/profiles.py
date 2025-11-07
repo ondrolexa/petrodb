@@ -98,7 +98,9 @@ def get_profiles(
 
 
 # READ Single Sample Profile
-@router.get("/profile/{project_id}/{sample_id}/{profile_id}")
+@router.get(
+    "/profile/{project_id}/{sample_id}/{profile_id}", response_model=ProfileSchema
+)
 def get_profile(
     project_id: int,
     sample_id: int,

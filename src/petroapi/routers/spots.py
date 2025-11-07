@@ -150,7 +150,7 @@ def get_spots(
 
 
 # READ Single Sample Spot
-@router.get("/spot/{project_id}/{sample_id}/{spot_id}")
+@router.get("/spot/{project_id}/{sample_id}/{spot_id}", response_model=SpotSchema)
 def get_spot(
     project_id: int,
     sample_id: int,
