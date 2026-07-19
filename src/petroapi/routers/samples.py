@@ -1,12 +1,7 @@
-# controllers/customer_controller.py
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from petroapi.auth import get_current_user
-from petroapi.database import get_db
-from petroapi.models import Project, Sample, User
+from petroapi.deps import DB, OwnedProject, PageParams, ProjectSample
+from petroapi.models import Sample
 from petroapi.schema import SampleCreateSchema, SampleSchema
 
 router = APIRouter()
@@ -16,25 +11,10 @@ router = APIRouter()
 
 # CREATE Sample
 @router.post("/sample/{project_id}", response_model=SampleSchema)
-def create_sample(
-    project_id: int,
-    sample: SampleCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
+def create_sample(project: OwnedProject, sample: SampleCreateSchema, db: DB):
     if (
         db.query(Sample)
-        .filter_by(project_id=project_id)
+        .filter_by(project_id=project.id)
         .filter_by(name=sample.name)
         .first()
     ):
@@ -52,89 +32,24 @@ def create_sample(
 
 # READ All Samples
 @router.get("/samples/{project_id}", response_model=list[SampleSchema])
-def get_samples(
-    project_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
+def get_samples(project: OwnedProject, db: DB, page: PageParams):
+    return (
+        db.query(Sample)
+        .filter_by(project_id=project.id)
+        .offset(page.offset)
+        .limit(page.limit)
     )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    samples = db.query(Sample).filter_by(project_id=project_id)
-    if samples is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No samples found"
-        )
-    return samples
 
 
 # READ Single Sample
 @router.get("/sample/{project_id}/{sample_id}", response_model=SampleSchema)
-def get_sample(
-    project_id: int,
-    sample_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
+def get_sample(sample: ProjectSample):
     return sample
 
 
 # UPDATE Sample
 @router.put("/sample/{project_id}/{sample_id}", response_model=SampleSchema)
-def update_sample(
-    project_id: int,
-    sample_id: int,
-    sample_update: SampleCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
+def update_sample(sample: ProjectSample, sample_update: SampleCreateSchema, db: DB):
     for field, value in sample_update.model_dump(exclude_unset=True).items():
         setattr(sample, field, value)
 
@@ -144,33 +59,9 @@ def update_sample(
 
 
 # DELETE Sample
-@router.delete("/sample/{project_id}/{sample_id}", response_model=dict[str, str])
-def delete_sample(
-    project_id: int,
-    sample_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
+@router.delete(
+    "/sample/{project_id}/{sample_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_sample(sample: ProjectSample, db: DB):
     db.delete(sample)
     db.commit()
-    return dict(message="Sample deleted successfully")

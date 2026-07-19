@@ -1,12 +1,14 @@
 # controllers/customer_controller.py
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends, status
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
+from petroapi.auth import create_access_token, verify_password
+from petroapi.database import get_db
 from petroapi.models import User
 from petroapi.schema import Token
-from petroapi.auth import verify_password, create_access_token
-from petroapi.database import get_db
 
 router = APIRouter()
 
@@ -14,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/token", response_model=Token)
-async def login_for_access_token(
+def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[Session, Depends(get_db)],
 ):

@@ -1,12 +1,7 @@
-# controllers/customer_controller.py
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from petroapi.auth import get_current_user
-from petroapi.database import get_db
-from petroapi.models import Profile, ProfileSpot, Project, Sample, User
+from petroapi.deps import DB, PageParams, SampleProfile
+from petroapi.models import ProfileSpot
 from petroapi.schema import ProfileSpotCreateSchema, ProfileSpotSchema
 
 router = APIRouter()
@@ -20,46 +15,11 @@ router = APIRouter()
     response_model=ProfileSpotSchema,
 )
 def create_profilespot(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
-    profilespot: ProfileSpotCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
+    profile: SampleProfile, profilespot: ProfileSpotCreateSchema, db: DB
 ):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
     if (
         db.query(ProfileSpot)
-        .filter_by(profile_id=profile_id)
+        .filter_by(profile_id=profile.id)
         .filter_by(index=profilespot.index)
         .first()
     ):
@@ -67,7 +27,7 @@ def create_profilespot(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Profile spot with same index already exists",
         )
-    new_profilespot = ProfileSpot(**profilespot.dict())
+    new_profilespot = ProfileSpot(**profilespot.model_dump())
     profile.spots.append(new_profilespot)
     db.add(profile)
     db.commit()
@@ -75,54 +35,19 @@ def create_profilespot(
     return new_profilespot
 
 
-# CREATE Sample Profile Spot
+# CREATE Sample Profile Spots
 @router.post(
     "/profilespots/{project_id}/{sample_id}/{profile_id}",
     response_model=list[ProfileSpotSchema],
 )
 def create_profilespots(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
-    profilespots: list[ProfileSpotCreateSchema],
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
+    profile: SampleProfile, profilespots: list[ProfileSpotCreateSchema], db: DB
 ):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
     new_profilespots = []
     for profilespot in profilespots:
         if (
             db.query(ProfileSpot)
-            .filter_by(profile_id=profile_id)
+            .filter_by(profile_id=profile.id)
             .filter_by(index=profilespot.index)
             .first()
         ):
@@ -130,7 +55,7 @@ def create_profilespots(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Profile spot with same index already exists",
             )
-        new_profilespot = ProfileSpot(**profilespot.dict())
+        new_profilespot = ProfileSpot(**profilespot.model_dump())
         profile.spots.append(new_profilespot)
         new_profilespots.append(new_profilespot)
 
@@ -146,53 +71,14 @@ def create_profilespots(
     "/profilespots/{project_id}/{sample_id}/{profile_id}",
     response_model=list[ProfileSpotSchema],
 )
-def get_profilespots(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
-    profilespots = (
+def get_profilespots(profile: SampleProfile, db: DB, page: PageParams):
+    return (
         db.query(ProfileSpot)
-        .filter_by(profile_id=profile_id)
+        .filter_by(profile_id=profile.id)
         .order_by(ProfileSpot.index.asc())
+        .offset(page.offset)
+        .limit(page.limit)
     )
-    if profilespots is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile spots not found"
-        )
-    return profilespots
 
 
 # READ Single Sample Profile Spot
@@ -200,48 +86,10 @@ def get_profilespots(
     "/profilespot/{project_id}/{sample_id}/{profile_id}/{profilespot_id}",
     response_model=ProfileSpotSchema,
 )
-def get_profilespot(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
-    profilespot_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
+def get_profilespot(profile: SampleProfile, profilespot_id: int, db: DB):
     profilespot = (
         db.query(ProfileSpot)
-        .filter_by(profile_id=profile_id)
-        .filter_by(id=profilespot_id)
+        .filter_by(profile_id=profile.id, id=profilespot_id)
         .first()
     )
     if profilespot is None:
@@ -251,61 +99,27 @@ def get_profilespot(
     return profilespot
 
 
-# UPDATE Sample Profile
+# UPDATE Sample Profile Spot
 @router.put(
     "/profilespot/{project_id}/{sample_id}/{profile_id}/{profilespot_id}",
     response_model=ProfileSpotSchema,
 )
 def update_profilespot(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
+    profile: SampleProfile,
     profilespot_id: int,
     profilespot_update: ProfileSpotCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
+    db: DB,
 ):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
     profilespot = (
         db.query(ProfileSpot)
-        .filter_by(profile_id=profile_id)
-        .filter_by(id=profilespot_id)
+        .filter_by(profile_id=profile.id, id=profilespot_id)
         .first()
     )
     if profilespot is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile spot not found"
         )
-    for field, value in profilespot_update.dict(exclude_unset=True).items():
+    for field, value in profilespot_update.model_dump(exclude_unset=True).items():
         setattr(profilespot, field, value)
 
     db.commit()
@@ -313,53 +127,15 @@ def update_profilespot(
     return profilespot
 
 
-# DELETE Sample Profile
+# DELETE Sample Profile Spot
 @router.delete(
     "/profilespot/{project_id}/{sample_id}/{profile_id}/{profilespot_id}",
-    response_model=dict[str, str],
+    status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_profilespot(
-    project_id: int,
-    sample_id: int,
-    profile_id: int,
-    profilespot_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    profile = (
-        db.query(Profile)
-        .filter_by(sample_id=sample_id)
-        .filter_by(id=profile_id)
-        .first()
-    )
-    if profile is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
-        )
+def delete_profilespot(profile: SampleProfile, profilespot_id: int, db: DB):
     profilespot = (
         db.query(ProfileSpot)
-        .filter_by(profile_id=profile_id)
-        .filter_by(id=profilespot_id)
+        .filter_by(profile_id=profile.id, id=profilespot_id)
         .first()
     )
     if profilespot is None:
@@ -368,4 +144,3 @@ def delete_profilespot(
         )
     db.delete(profilespot)
     db.commit()
-    return dict(message="Profile spot deleted successfully")

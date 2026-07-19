@@ -1,12 +1,7 @@
-# controllers/customer_controller.py
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from petroapi.auth import get_current_user
-from petroapi.database import get_db
-from petroapi.models import Profile, Project, Sample, Spot, User
+from petroapi.deps import DB, CurrentUser
+from petroapi.models import Profile, Project, Sample, Spot
 from petroapi.schema import ProfileSchema, ProjectSchema, SampleSchema, SpotSchema
 
 router = APIRouter()
@@ -15,11 +10,7 @@ router = APIRouter()
 
 
 @router.get("/search/project/{project_name}", response_model=ProjectSchema)
-def get_project(
-    project_name: str,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def get_project(project_name: str, user: CurrentUser, db: DB):
     project = (
         db.query(Project)
         .where(Project.users.any(id=user.id))
@@ -34,12 +25,7 @@ def get_project(
 
 
 @router.get("/search/sample/{pid}/{sample_name}", response_model=SampleSchema)
-def get_sample(
-    pid: int,
-    sample_name: str,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def get_sample(pid: int, sample_name: str, user: CurrentUser, db: DB):
     sample = (
         db.query(Sample)
         .join(Project)
@@ -56,13 +42,7 @@ def get_sample(
 
 
 @router.get("/search/spots/{pid}/{sid}/{mineral}", response_model=list[SpotSchema])
-def get_spots(
-    pid: int,
-    sid: int,
-    mineral: str,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def get_spots(pid: int, sid: int, mineral: str, user: CurrentUser, db: DB):
     spots = (
         db.query(Spot)
         .join(Sample)
@@ -81,13 +61,7 @@ def get_spots(
 
 
 @router.get("/search/profile/{pid}/{sid}/{label}", response_model=ProfileSchema)
-def get_profile(
-    pid: int,
-    sid: int,
-    label: str,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def get_profile(pid: int, sid: int, label: str, user: CurrentUser, db: DB):
     profile = (
         db.query(Profile)
         .join(Sample)

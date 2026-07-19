@@ -1,4 +1,12 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +37,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     email: Mapped[str] = mapped_column(String, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String)
+    is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     projects: Mapped[list["Project"]] = relationship(
         secondary=users_projects, back_populates="users"
     )
@@ -36,6 +45,7 @@ class User(Base):
 
 class Spot(Base):
     __tablename__ = "spots"
+    __table_args__ = (UniqueConstraint("sample_id", "label"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     sample_id: Mapped[int] = mapped_column(
@@ -49,6 +59,7 @@ class Spot(Base):
 
 class Area(Base):
     __tablename__ = "areas"
+    __table_args__ = (UniqueConstraint("sample_id", "label"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     sample_id: Mapped[int] = mapped_column(
@@ -61,6 +72,7 @@ class Area(Base):
 
 class ProfileSpot(Base):
     __tablename__ = "profilespots"
+    __table_args__ = (UniqueConstraint("profile_id", "index"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(
@@ -73,6 +85,7 @@ class ProfileSpot(Base):
 
 class Profile(Base):
     __tablename__ = "profiles"
+    __table_args__ = (UniqueConstraint("sample_id", "label"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     sample_id: Mapped[int] = mapped_column(
@@ -88,6 +101,7 @@ class Profile(Base):
 
 class Sample(Base):
     __tablename__ = "samples"
+    __table_args__ = (UniqueConstraint("project_id", "name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(

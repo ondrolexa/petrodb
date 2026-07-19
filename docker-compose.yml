@@ -2,20 +2,24 @@ services:
 
   petrodb:
     container_name: petrodb_postgres
-    image: postgres
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${DBUSER}
       POSTGRES_PASSWORD: ${DBPASSWORD}
       PGDATA: /data/postgres
       POSTGRES_DB: ${DBNAME}
     user: 1000:1000
+    security_opt:
+      - no-new-privileges:true
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     networks:
       - petrodb_net
     restart: unless-stopped
     volumes:
       - ./postgres-data:/data/postgres
+      - ./backup/restore-on-init.sh:/docker-entrypoint-initdb.d/restore-on-init.sh:ro
+      - ./dumps:/dumps:ro
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "petrodb", "-U", "${DBUSER}" ]
       interval: 15s
@@ -25,6 +29,9 @@ services:
   petroapi:
     container_name: petrodb_api
     image: ondrolexa/petroapi
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
@@ -38,8 +45,46 @@ services:
     depends_on:
       petrodb:
         condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
     ports:
-      - "8000:80"
+      - "8000:8080"
+    networks:
+      - petrodb_net
+    restart: unless-stopped
+
+  petrodb-backup:
+    container_name: petrodb_backup
+    build:
+      context: ./backup
+      dockerfile: Dockerfile
+    environment:
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 3 * * *}
+      BACKUP_KEEP_RECENT_DAYS: ${BACKUP_KEEP_RECENT_DAYS:-7}
+      BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-5}
+      BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-12}
+      BACKUP_KEEP_YEARS: ${BACKUP_KEEP_YEARS:-5}
+      DBHOST: petrodb
+      DBNAME: ${DBNAME}
+      DBUSER: ${DBUSER}
+      DBPASSWORD: ${DBPASSWORD}
+    depends_on:
+      petrodb:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./dumps:/dumps
+    healthcheck:
+      test: [ "CMD", "pgrep", "crond" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - petrodb_net
     restart: unless-stopped

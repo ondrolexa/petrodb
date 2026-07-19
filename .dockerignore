@@ -1,0 +1,33 @@
+# Secrets / local config
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info
+
+# Version control / CI
+.git/
+.gitignore
+.pre-commit-config.yaml
+
+# Local Postgres data volume
+postgres-data/
+
+# Database backups
+dumps/
+
+# Editor / OS cruft
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -1,38 +1,35 @@
-from typing import Any
-
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserCreateSchema(BaseModel):
-    username: str
-    email: EmailStr | None = None
-    password: str
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "username": "john",
                 "email": "john.doe@email.com",
-                "password": "weakpasword",
+                "password": "SuperSecret123",
             }
-        }
+        },
+    )
+
+    username: str
+    email: EmailStr
+    password: str = Field(min_length=12)
 
 
 class UserSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
-    email: EmailStr | None = None
-
-    class Config:
-        from_attributes = True
+    email: EmailStr
 
 
 class UserNameSchema(BaseModel):
-    username: str
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+    username: str
 
 
 class Token(BaseModel):
@@ -41,59 +38,55 @@ class Token(BaseModel):
 
 
 class ProjectCreateSchema(BaseModel):
-    name: str
-    description: str | None = None
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "name": "Mnich",
                 "description": "Reconstruction of UHP history",
             }
-        }
+        },
+    )
+
+    name: str
+    description: str | None = None
 
 
 class ProjectSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     description: str | None = None
 
-    class Config:
-        from_attributes = True
-
 
 class SampleCreateSchema(BaseModel):
-    name: str
-    description: str | None = None
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "name": "SX17W",
                 "description": "mylonite",
             }
-        }
+        },
+    )
+
+    name: str
+    description: str | None = None
 
 
 class SampleSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
     description: str | None = None
 
-    class Config:
-        from_attributes = True
-
 
 class SpotCreateSchema(BaseModel):
-    label: str
-    mineral: str | None = None
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "label": "pl-1",
                 "mineral": "Pl",
@@ -106,26 +99,27 @@ class SpotCreateSchema(BaseModel):
                     "K2O": 6.2,
                 },
             }
-        }
+        },
+    )
+
+    label: str
+    mineral: str | None = None
+    values: dict[str, float]
 
 
 class SpotSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     label: str
     mineral: str | None = None
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
+    values: dict[str, float]
 
 
 class AreaCreateSchema(BaseModel):
-    label: str
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "label": "sp-1",
                 "values": {
@@ -140,43 +134,43 @@ class AreaCreateSchema(BaseModel):
                     "FeO": 1.413152,
                 },
             }
-        }
+        },
+    )
+
+    label: str
+    values: dict[str, float]
 
 
 class AreaSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     label: str
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
+    values: dict[str, float]
 
 
 class ProfileCreateSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={"example": {"label": "profile-1", "mineral": "Grt"}},
+    )
+
     label: str
     mineral: str | None = None
 
-    class Config:
-        from_attributes = True
-        json_schema_extra = {"example": {"label": "profile-1", "mineral": "Grt"}}
-
 
 class ProfileSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     label: str
     mineral: str | None = None
 
-    class Config:
-        from_attributes = True
-
 
 class ProfileSpotCreateSchema(BaseModel):
-    index: int
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "index": 6,
                 "values": {
@@ -191,13 +185,16 @@ class ProfileSpotCreateSchema(BaseModel):
                     "MgO": 1.033,
                 },
             }
-        }
+        },
+    )
+
+    index: int
+    values: dict[str, float]
 
 
 class ProfileSpotSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     index: int
-    values: dict[str, Any]
-
-    class Config:
-        from_attributes = True
+    values: dict[str, float]

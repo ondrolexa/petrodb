@@ -1,22 +1,26 @@
+import logging
+from contextlib import asynccontextmanager
 from os.path import dirname, join
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
-from petroapi.database import Base, engine
+from sqlalchemy.exc import IntegrityError
+
 from petroapi.config import init_db
-from petroapi.routers.token import router as token_router
-from petroapi.routers.users import router as users_router
-from petroapi.routers.projects import router as projects_router
-from petroapi.routers.samples import router as samples_router
-from petroapi.routers.spots import router as spots_router
 from petroapi.routers.areas import router as areas_router
 from petroapi.routers.profiles import router as profiles_router
 from petroapi.routers.profilespots import router as profilespots_router
+from petroapi.routers.projects import router as projects_router
+from petroapi.routers.samples import router as samples_router
 from petroapi.routers.search import router as search_router
+from petroapi.routers.spots import router as spots_router
+from petroapi.routers.token import router as token_router
+from petroapi.routers.users import router as users_router
+
+logger = logging.getLogger("petroapi")
 
 templates = Jinja2Templates(directory=join(dirname(__file__), "templates"))
-
-Base.metadata.create_all(engine)
-init_db()
 
 tags_metadata = [
     {
@@ -53,7 +57,28 @@ tags_metadata = [
     },
 ]
 
-app = FastAPI(openapi_tags=tags_metadata)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Schema is managed by Alembic migrations (see alembic/), applied via
+    # entrypoint.sh before the app starts - not created here.
+    init_db()
+    yield
+
+
+app = FastAPI(openapi_tags=tags_metadata, lifespan=lifespan)
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request: Request, exc: IntegrityError):
+    logger.warning(
+        "Integrity error on %s %s: %s", request.method, request.url.path, exc
+    )
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={"detail": "Resource already exists or violates a database constraint"},
+    )
+
 
 app.include_router(token_router)
 app.include_router(users_router, prefix="/api", tags=["Users"])

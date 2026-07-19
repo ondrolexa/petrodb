@@ -1,19 +1,20 @@
-import os
-from dotenv import load_dotenv
-from typing import Annotated
-import jwt
-from pwdlib import PasswordHash
 from datetime import datetime, timedelta, timezone
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, Depends, status
-from petroapi.models import User
-from petroapi.database import get_db
+from typing import Annotated
 
-_ = load_dotenv()
-SECRET_KEY = str(os.environ.get("SECRET_KEY"))
-ALGORITHM = str(os.environ.get("ALGORITHM"))
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from pwdlib import PasswordHash
+from sqlalchemy.orm import Session
+
+from petroapi.database import get_db
+from petroapi.models import User
+from petroapi.settings import get_settings
+
+settings = get_settings()
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 password_hash = PasswordHash.recommended()
 
@@ -56,10 +57,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # routers depends
 
 
-async def get_current_user(
+def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)],
-):
+) -> User:
     username = verify_token(token)
     if username is None:
         raise HTTPException(

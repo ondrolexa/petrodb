@@ -13,4 +13,10 @@ wheels/
 .env
 
 # local postgres data
-postgres-data
+postgres-data*
+
+# database dumps/backups
+dumps/
+
+# uv lock file
+uv.lock

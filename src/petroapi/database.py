@@ -1,17 +1,9 @@
-import os
-from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-_ = load_dotenv()
+from petroapi.settings import get_settings
 
-DBHOST = str(os.environ.get("DBHOST"))
-DBNAME = str(os.environ.get("DBNAME"))
-DBUSER = str(os.environ.get("DBUSER"))
-DBPASSWORD = str(os.environ.get("DBPASSWORD"))
-DATABASE_URL = f"postgresql://{DBUSER}:{DBPASSWORD}@{DBHOST}/{DBNAME}"
-
-engine = create_engine(DATABASE_URL)
+engine = create_engine(get_settings().database_url, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 

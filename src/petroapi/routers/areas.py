@@ -1,12 +1,7 @@
-# controllers/customer_controller.py
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from petroapi.auth import get_current_user
-from petroapi.database import get_db
-from petroapi.models import Area, Project, Sample, User
+from petroapi.deps import DB, PageParams, ProjectSample
+from petroapi.models import Area
 from petroapi.schema import AreaCreateSchema, AreaSchema
 
 router = APIRouter()
@@ -16,36 +11,10 @@ router = APIRouter()
 
 # CREATE Sample Area
 @router.post("/area/{project_id}/{sample_id}", response_model=AreaSchema)
-def create_area(
-    project_id: int,
-    sample_id: int,
-    area: AreaCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
+def create_area(sample: ProjectSample, area: AreaCreateSchema, db: DB):
     if (
         db.query(Area)
-        .filter_by(sample_id=sample_id)
+        .filter_by(sample_id=sample.id)
         .filter_by(label=area.label)
         .first()
     ):
@@ -53,7 +22,7 @@ def create_area(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Area with same label already exists",
         )
-    new_area = Area(**area.dict())
+    new_area = Area(**area.model_dump())
     sample.areas.append(new_area)
     db.add(sample)
     db.commit()
@@ -63,38 +32,12 @@ def create_area(
 
 # CREATE Sample Areas
 @router.post("/areas/{project_id}/{sample_id}", response_model=list[AreaSchema])
-def create_areas(
-    project_id: int,
-    sample_id: int,
-    areas: list[AreaCreateSchema],
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
+def create_areas(sample: ProjectSample, areas: list[AreaCreateSchema], db: DB):
     new_areas = []
     for area in areas:
         if (
             db.query(Area)
-            .filter_by(sample_id=sample_id)
+            .filter_by(sample_id=sample.id)
             .filter_by(label=area.label)
             .first()
         ):
@@ -102,7 +45,7 @@ def create_areas(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Area with same label already exists",
             )
-        new_area = Area(**area.dict())
+        new_area = Area(**area.model_dump())
         sample.areas.append(new_area)
         new_areas.append(new_area)
 
@@ -115,70 +58,19 @@ def create_areas(
 
 # READ All Sample Areas
 @router.get("/areas/{project_id}/{sample_id}", response_model=list[AreaSchema])
-def get_areas(
-    project_id: int,
-    sample_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
+def get_areas(sample: ProjectSample, db: DB, page: PageParams):
+    return (
+        db.query(Area)
+        .filter_by(sample_id=sample.id)
+        .offset(page.offset)
+        .limit(page.limit)
     )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    areas = db.query(Area).filter_by(sample_id=sample_id)
-    if areas is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Areas not found"
-        )
-    return areas
 
 
 # READ Single Sample Area
 @router.get("/area/{project_id}/{sample_id}/{area_id}", response_model=AreaSchema)
-def get_area(
-    project_id: int,
-    sample_id: int,
-    area_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    area = db.query(Area).filter_by(sample_id=sample_id).filter_by(id=area_id).first()
+def get_area(sample: ProjectSample, area_id: int, db: DB):
+    area = db.query(Area).filter_by(sample_id=sample.id, id=area_id).first()
     if area is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Area not found"
@@ -189,39 +81,14 @@ def get_area(
 # UPDATE Sample Area
 @router.put("/area/{project_id}/{sample_id}/{area_id}", response_model=AreaSchema)
 def update_area(
-    project_id: int,
-    sample_id: int,
-    area_id: int,
-    area_update: AreaCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
+    sample: ProjectSample, area_id: int, area_update: AreaCreateSchema, db: DB
 ):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    area = db.query(Area).filter_by(sample_id=sample_id).filter_by(id=area_id).first()
+    area = db.query(Area).filter_by(sample_id=sample.id, id=area_id).first()
     if area is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Area not found"
         )
-    for field, value in area_update.dict(exclude_unset=True).items():
+    for field, value in area_update.model_dump(exclude_unset=True).items():
         setattr(area, field, value)
 
     db.commit()
@@ -231,40 +98,14 @@ def update_area(
 
 # DELETE Sample Area
 @router.delete(
-    "/area/{project_id}/{sample_id}/{area_id}", response_model=dict[str, str]
+    "/area/{project_id}/{sample_id}/{area_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_area(
-    project_id: int,
-    sample_id: int,
-    area_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
-    sample = (
-        db.query(Sample)
-        .filter_by(project_id=project_id)
-        .filter_by(id=sample_id)
-        .first()
-    )
-    if sample is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found"
-        )
-    area = db.query(Area).filter_by(sample_id=sample_id).filter_by(id=area_id).first()
+def delete_area(sample: ProjectSample, area_id: int, db: DB):
+    area = db.query(Area).filter_by(sample_id=sample.id, id=area_id).first()
     if area is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Area not found"
         )
     db.delete(area)
     db.commit()
-    return dict(message="Area deleted successfully")

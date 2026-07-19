@@ -1,11 +1,6 @@
-# controllers/customer_controller.py
-from typing import Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from petroapi.auth import get_current_user
-from petroapi.database import get_db
+from petroapi.deps import DB, CurrentUser, OwnedProject, PageParams
 from petroapi.models import Project, User
 from petroapi.schema import ProjectCreateSchema, ProjectSchema, UserNameSchema
 
@@ -16,11 +11,7 @@ router = APIRouter()
 
 # CREATE Project
 @router.post("/project/", response_model=ProjectSchema)
-def create_project(
-    project: ProjectCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
+def create_project(project: ProjectCreateSchema, user: CurrentUser, db: DB):
     if (
         db.query(Project)
         .where(Project.users.any(id=user.id))
@@ -41,52 +32,24 @@ def create_project(
 
 # READ All Projects
 @router.get("/projects/", response_model=list[ProjectSchema])
-def get_projects(
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    # return user.projects
-    return db.query(Project).where(Project.users.any(id=user.id))
+def get_projects(user: CurrentUser, db: DB, page: PageParams):
+    return (
+        db.query(Project)
+        .where(Project.users.any(id=user.id))
+        .offset(page.offset)
+        .limit(page.limit)
+    )
 
 
 # READ Single Project
 @router.get("/project/{project_id}", response_model=ProjectSchema)
-def get_project(
-    project_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
+def get_project(project: OwnedProject):
     return project
 
 
 # UPDATE Project
 @router.put("/project/{project_id}", response_model=ProjectSchema)
-def update_project(
-    project_id: int,
-    project_update: ProjectCreateSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
+def update_project(project: OwnedProject, project_update: ProjectCreateSchema, db: DB):
     for field, value in project_update.model_dump(exclude_unset=True).items():
         setattr(project, field, value)
 
@@ -97,63 +60,29 @@ def update_project(
 
 # ADD USER Project
 @router.put("/project/{project_id}/adduser", response_model=ProjectSchema)
-def adduser_project(
-    project_id: int,
-    user_update: UserNameSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
+def adduser_project(project: OwnedProject, user_update: UserNameSchema, db: DB):
     new_user = db.query(User).filter_by(username=user_update.username).first()
     if new_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    if new_user.id == user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You are already there",
-        )
-    if new_user not in project.users:
-        project.users.append(new_user)
-        db.add(project)
-        db.commit()
-        db.refresh(project)
-        return project
-    else:
+    if new_user in project.users:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already in project",
         )
+    project.users.append(new_user)
+    db.add(project)
+    db.commit()
+    db.refresh(project)
+    return project
 
 
 # REMOVE USER Project
 @router.put("/project/{project_id}/removeuser", response_model=ProjectSchema)
 def removeuser_project(
-    project_id: int,
-    user_update: UserNameSchema,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
+    project: OwnedProject, user_update: UserNameSchema, user: CurrentUser, db: DB
 ):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
     user_todel = db.query(User).filter_by(username=user_update.username).first()
     if user_todel is None:
         raise HTTPException(
@@ -164,36 +93,20 @@ def removeuser_project(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="You cannot remove yourself",
         )
-    if user_todel in project.users:
-        project.users.remove(user_todel)
-        db.add(project)
-        db.commit()
-        db.refresh(project)
-        return project
-    else:
+    if user_todel not in project.users:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username not in project",
         )
+    project.users.remove(user_todel)
+    db.add(project)
+    db.commit()
+    db.refresh(project)
+    return project
 
 
 # DELETE Project
-@router.delete("/project/{project_id}", response_model=dict[str, str])
-def delete_project(
-    project_id: int,
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[Session, Depends(get_db)],
-):
-    project = (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .filter_by(id=project_id)
-        .first()
-    )
-    if project is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
-        )
+@router.delete("/project/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(project: OwnedProject, db: DB):
     db.delete(project)
     db.commit()
-    return dict(message="Project deleted successfully")
