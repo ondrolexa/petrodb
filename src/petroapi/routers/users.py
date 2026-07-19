@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from petroapi.auth import get_password_hash
-from petroapi.deps import DB, CurrentUser, PageParams
+from petroapi.deps import DB, CurrentUser
 from petroapi.models import User
 from petroapi.schema import UserCreateSchema, UserSchema
 
@@ -37,11 +37,11 @@ def create_user(new_user: UserCreateSchema, user: CurrentUser, db: DB):
 
 # READ All Users
 @router.get("/users/", response_model=list[UserSchema])
-def get_users(user: CurrentUser, db: DB, page: PageParams):
+def get_users(user: CurrentUser, db: DB):
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Only administrator can list users",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return db.query(User).offset(page.offset).limit(page.limit)
+    return db.query(User)

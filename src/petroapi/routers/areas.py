@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, PageParams, ProjectSample
+from petroapi.deps import DB, ProjectSample
 from petroapi.models import Area
 from petroapi.schema import AreaCreateSchema, AreaSchema
 
@@ -58,13 +58,8 @@ def create_areas(sample: ProjectSample, areas: list[AreaCreateSchema], db: DB):
 
 # READ All Sample Areas
 @router.get("/areas/{project_id}/{sample_id}", response_model=list[AreaSchema])
-def get_areas(sample: ProjectSample, db: DB, page: PageParams):
-    return (
-        db.query(Area)
-        .filter_by(sample_id=sample.id)
-        .offset(page.offset)
-        .limit(page.limit)
-    )
+def get_areas(sample: ProjectSample, db: DB):
+    return db.query(Area).filter_by(sample_id=sample.id)
 
 
 # READ Single Sample Area

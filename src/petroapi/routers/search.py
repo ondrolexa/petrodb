@@ -24,13 +24,13 @@ def get_project(project_name: str, user: CurrentUser, db: DB):
     return project
 
 
-@router.get("/search/sample/{pid}/{sample_name}", response_model=SampleSchema)
-def get_sample(pid: int, sample_name: str, user: CurrentUser, db: DB):
+@router.get("/search/sample/{project_id}/{sample_name}", response_model=SampleSchema)
+def get_sample(project_id: int, sample_name: str, user: CurrentUser, db: DB):
     sample = (
         db.query(Sample)
         .join(Project)
         .where(Project.users.any(id=user.id))
-        .filter(Project.id == pid)
+        .filter(Project.id == project_id)
         .filter(Sample.name == sample_name)
         .first()
     )
@@ -41,34 +41,36 @@ def get_sample(pid: int, sample_name: str, user: CurrentUser, db: DB):
     return sample
 
 
-@router.get("/search/spots/{pid}/{sid}/{mineral}", response_model=list[SpotSchema])
-def get_spots(pid: int, sid: int, mineral: str, user: CurrentUser, db: DB):
-    spots = (
+@router.get("/search/spot/{project_id}/{sample_id}/{label}", response_model=SpotSchema)
+def get_spot(project_id: int, sample_id: int, label: str, user: CurrentUser, db: DB):
+    spot = (
         db.query(Spot)
         .join(Sample)
         .join(Project)
         .where(Project.users.any(id=user.id))
-        .filter(Project.id == pid)
-        .filter(Sample.id == sid)
-        .filter(Spot.mineral == mineral)
-        .all()
+        .filter(Project.id == project_id)
+        .filter(Sample.id == sample_id)
+        .filter(Spot.label == label)
+        .first()
     )
-    if not spots:
+    if spot is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Mineral not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Spot not found"
         )
-    return spots
+    return spot
 
 
-@router.get("/search/profile/{pid}/{sid}/{label}", response_model=ProfileSchema)
-def get_profile(pid: int, sid: int, label: str, user: CurrentUser, db: DB):
+@router.get(
+    "/search/profile/{project_id}/{sample_id}/{label}", response_model=ProfileSchema
+)
+def get_profile(project_id: int, sample_id: int, label: str, user: CurrentUser, db: DB):
     profile = (
         db.query(Profile)
         .join(Sample)
         .join(Project)
         .where(Project.users.any(id=user.id))
-        .filter(Project.id == pid)
-        .filter(Sample.id == sid)
+        .filter(Project.id == project_id)
+        .filter(Sample.id == sample_id)
         .filter(Profile.label == label)
         .first()
     )

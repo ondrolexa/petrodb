@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, PageParams, ProjectSample
+from petroapi.deps import DB, ProjectSample
 from petroapi.models import Spot
 from petroapi.schema import SpotCreateSchema, SpotSchema
 
@@ -58,13 +58,21 @@ def create_spots(sample: ProjectSample, spots: list[SpotCreateSchema], db: DB):
 
 # READ All Sample Spots
 @router.get("/spots/{project_id}/{sample_id}", response_model=list[SpotSchema])
-def get_spots(sample: ProjectSample, db: DB, page: PageParams):
-    return (
-        db.query(Spot)
-        .filter_by(sample_id=sample.id)
-        .offset(page.offset)
-        .limit(page.limit)
-    )
+def get_spots(sample: ProjectSample, db: DB):
+    return db.query(Spot).filter_by(sample_id=sample.id)
+
+
+# READ Sample Spots by mineral
+@router.get(
+    "/spots/{project_id}/{sample_id}/{mineral}", response_model=list[SpotSchema]
+)
+def get_spots_by_mineral(sample: ProjectSample, mineral: str, db: DB):
+    spots = db.query(Spot).filter_by(sample_id=sample.id, mineral=mineral).all()
+    if not spots:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Mineral not found"
+        )
+    return spots
 
 
 # READ Single Sample Spot

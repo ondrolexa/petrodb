@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from petroapi.auth import get_current_user
@@ -9,19 +9,6 @@ from petroapi.models import Profile, Project, Sample, User
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 DB = Annotated[Session, Depends(get_db)]
-
-
-class Pagination:
-    def __init__(
-        self,
-        limit: Annotated[int, Query(le=200)] = 50,
-        offset: Annotated[int, Query(ge=0)] = 0,
-    ):
-        self.limit = limit
-        self.offset = offset
-
-
-PageParams = Annotated[Pagination, Depends()]
 
 
 def get_owned_project(project_id: int, user: CurrentUser, db: DB) -> Project:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, PageParams, SampleProfile
+from petroapi.deps import DB, SampleProfile
 from petroapi.models import ProfileSpot
 from petroapi.schema import ProfileSpotCreateSchema, ProfileSpotSchema
 
@@ -71,13 +71,11 @@ def create_profilespots(
     "/profilespots/{project_id}/{sample_id}/{profile_id}",
     response_model=list[ProfileSpotSchema],
 )
-def get_profilespots(profile: SampleProfile, db: DB, page: PageParams):
+def get_profilespots(profile: SampleProfile, db: DB):
     return (
         db.query(ProfileSpot)
         .filter_by(profile_id=profile.id)
         .order_by(ProfileSpot.index.asc())
-        .offset(page.offset)
-        .limit(page.limit)
     )
 
 

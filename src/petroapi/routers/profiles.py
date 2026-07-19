@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, PageParams, ProjectSample, SampleProfile
+from petroapi.deps import DB, ProjectSample, SampleProfile
 from petroapi.models import Profile
 from petroapi.schema import ProfileCreateSchema, ProfileSchema
 
@@ -32,13 +32,8 @@ def create_profile(sample: ProjectSample, profile: ProfileCreateSchema, db: DB):
 
 # READ All Sample Profiles
 @router.get("/profiles/{project_id}/{sample_id}", response_model=list[ProfileSchema])
-def get_profiles(sample: ProjectSample, db: DB, page: PageParams):
-    return (
-        db.query(Profile)
-        .filter_by(sample_id=sample.id)
-        .offset(page.offset)
-        .limit(page.limit)
-    )
+def get_profiles(sample: ProjectSample, db: DB):
+    return db.query(Profile).filter_by(sample_id=sample.id)
 
 
 # READ Single Sample Profile

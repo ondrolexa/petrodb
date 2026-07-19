@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, OwnedProject, PageParams, ProjectSample
+from petroapi.deps import DB, OwnedProject, ProjectSample
 from petroapi.models import Sample
 from petroapi.schema import SampleCreateSchema, SampleSchema
 
@@ -32,13 +32,8 @@ def create_sample(project: OwnedProject, sample: SampleCreateSchema, db: DB):
 
 # READ All Samples
 @router.get("/samples/{project_id}", response_model=list[SampleSchema])
-def get_samples(project: OwnedProject, db: DB, page: PageParams):
-    return (
-        db.query(Sample)
-        .filter_by(project_id=project.id)
-        .offset(page.offset)
-        .limit(page.limit)
-    )
+def get_samples(project: OwnedProject, db: DB):
+    return db.query(Sample).filter_by(project_id=project.id)
 
 
 # READ Single Sample

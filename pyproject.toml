@@ -29,8 +29,15 @@ petroapi = "petroapi:main"
 requires = ["uv_build>=0.9.1,<0.10.0"]
 build-backend = "uv_build"
 
-[tool.black]
+[tool.ruff]
 line-length = 88
+target-version = "py314"
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E203", "E501", "E731", "E741", "E743", "F401"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.22",
+]

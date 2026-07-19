@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from petroapi.deps import DB, CurrentUser, OwnedProject, PageParams
+from petroapi.deps import DB, CurrentUser, OwnedProject
 from petroapi.models import Project, User
 from petroapi.schema import ProjectCreateSchema, ProjectSchema, UserNameSchema
 
@@ -32,13 +32,8 @@ def create_project(project: ProjectCreateSchema, user: CurrentUser, db: DB):
 
 # READ All Projects
 @router.get("/projects/", response_model=list[ProjectSchema])
-def get_projects(user: CurrentUser, db: DB, page: PageParams):
-    return (
-        db.query(Project)
-        .where(Project.users.any(id=user.id))
-        .offset(page.offset)
-        .limit(page.limit)
-    )
+def get_projects(user: CurrentUser, db: DB):
+    return db.query(Project).where(Project.users.any(id=user.id))
 
 
 # READ Single Project
